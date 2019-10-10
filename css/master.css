@@ -1,0 +1,68 @@
+<style>
+    .leaflet-container{
+      cursor:'crosshair';
+
+      }
+
+      .compBar{
+        cursor: 'ew-resize';
+
+
+      }
+
+        .wrapper {
+            width: 100%;
+            height: 100vh; /*view port height*/
+            display: grid;
+             /* small screens */
+            grid-template-areas:
+            "map"
+            "widget";
+            grid-template-rows: 10fr 2fr;
+
+        }
+
+        @media (min-width: 700px) {
+          .wrapper{
+            grid-template-areas:
+                "map widget";
+            grid-template-columns: 10fr 2fr;
+            grid-template-rows: auto;
+          }
+      }
+
+        #map {
+            grid-area: map;
+            border-radius: 10px;
+
+        }
+
+        #box {
+            grid-area: widget;
+            border-radius: 10px;
+            padding: 5px 10px 5px 10px;
+            border: 1px solid palegreen;
+            background-color: #f2f6f9;
+        }
+
+        /* set styles to the <h4> tag of the element with id= box */
+
+        #box h4 {
+            text-align: center;
+            font-size: 24px;
+            font-style: italic;
+        }
+
+        /* set styles to the <p> tag of the element with id= box */
+
+        #box p {
+            text-align: center;
+            font-size: 18px;
+            color: dodgerblue;
+        }
+
+        #formula{
+
+
+            opacity: 0.7;
+        }

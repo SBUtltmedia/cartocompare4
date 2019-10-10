@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+    <!-- Include Carto.js -->
+    <script src="https://cartodb-libs.global.ssl.fastly.net/carto.js/v4.0.0-beta.4/carto.min.js"></script>
+    <!-- Include Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"></script>
+    <link href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" rel="stylesheet">
+
+    <!-- Include d3 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.12.0/d3.min.js"></script>
+    <link rel="stylesheet" href="css/master.css">
+
+</head>
+
+<body>
+    <div class='wrapper'>
+        <div id="map"></div>
+        <div id="box">
+            <div id="formula"></div>
+        </div>
+    </div>
+
+    <script>
+
+    map = L.map('map', {
+      zoomControl : true,
+      center : [ 40.789142, -73.064961 ],
+      zoom : 10,
+      minZoom : 10,
+      maxZoom : 15
+    });
+    // Change the cursor depending on the element we are on
+    // Fitting to tell the user the action they should take in each position
+
+    var mapBounds =
+        L.latLngBounds([ 41.394543, -70.684156 ], [ 40.370698, -75.346929 ]);
+
+    // Changing levels of boundry based on the zoom level
+    // Keeps the user centered around long island
+    // After zoomLevel == 11 the entire map is bounded within Long Island
+    map.setMaxBounds(mapBounds);
+
+        L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+
+            center: [40.789142, -73.064961],
+
+            zoom: 12
+
+        }).addTo(map);
+
+        //
+        // var CartoLayerSource = {
+        //   user_name : "latinos",
+        //   api_key : "6835ac33fdea1831afbabcc40bb7e09468c6945a",
+        //   settings.serverUrl
+        //   maps_api_template : "//app2.gss.stonybrook.edu/user/{user}",
+        //   sql_api_template : "//app2.gss.stonybrook.edu/user/{user}",
+        //   sublayers : []
+        // };
+
+        // define client
+        const client = new carto.Client({
+            apiKey: "6835ac33fdea1831afbabcc40bb7e09468c6945a",
+            username:  "latinos",
+            serverUrl: "http://app2.gss.stonybrook.edu/user/latinos"
+        });
+        // define source of data using a SQL query
+        const source = new carto.source.SQL(`
+        SELECT '1960' as year, g.cartodb_id, g.gisjoin, g.the_geom, g.the_geom_webmercator, ca4001 as total_pop, ca7001 as hispanic, ca4001 - ca7001 as non_hispanic, round(ca7001 * 1.0 / ca4001 * 100, 1) as pct_hispanic, areaname FROM tract_1960 g INNER JOIN census_1960_tract_li t ON g.gisjoin = t.gisjoin WHERE ca4001 != 0
+        `);
+        // define CartoCSS code to style data on map
+        const style = new carto.style.CartoCSS(`
+#layer { polygon-fill: #810f7c; polygon-opacity: 1; line-width: 0.5; line-color: #b9b1b1; line-opacity: 0.5; } #layer[ pct_hispanic <= 80] { polygon-fill: #8856a7; } #layer[ pct_hispanic <= 40] { polygon-fill: #8c96c6; } #layer [ pct_hispanic <= 20] { polygon-fill: #9ebcda; } #layer [ pct_hispanic <= 10] { polygon-fill: #bfd3e6; } #layer [ pct_hispanic <= 5] { polygon-fill: #edf8fb; }
+        `);
+        // create CARTO layer from source and style variables
+        const Cartolayer = new carto.layer.Layer(source, style);
+
+        // add CARTO layer to the client
+        client.addLayer(Cartolayer);
+
+        // get tile from client and add them to the map object
+        client.getLeafletLayer().addTo(map);
+
+        // create formula dataview using pop_max column values
+        // SUM formula
+        // const formulaDataview = new carto.dataview.Formula(source, 'pop_max', {
+        //     operation: carto.operation.SUM
+        // });
+
+        // Use D3.js library to format text with comma separator for thousands
+        let commaSeparator = d3.format(",");
+        // when there is a change on the data, execute function to
+        // display result from dataview in DOM element
+        // formulaDataview.on('dataChanged', function(data){
+        //     let content = `<h4>Total of inhabitants: ${commaSeparator(data.result)}</h4><p>with ${data.operation.toUpperCase()} operation</p>`
+        //     document.getElementById('formula').innerHTML = content;
+        // });
+        //
+        // // add category dataview to client
+        // client.addDataview(formulaDataview);
+
+        // Set bounding box filter
+        const bboxFilter = new carto.filter.BoundingBoxLeaflet(map);
+
+        // add filter to formula dataview, so when the BBOX change, the formula data view will be recalculated
+        //formulaDataview.addFilter(bboxFilter);
+
+    </script>
+</body>
+
+</html>
